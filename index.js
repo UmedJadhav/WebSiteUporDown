@@ -1,9 +1,47 @@
 const config = require('./config');
 const http = require('http');
+const https = require('https');
 const url = require('url');
+const fs = require('fs');
 const stringDecoder = require('string_decoder').StringDecoder;
 
-const server = http.createServer((req,res)=>{
+const httpServer = http.createServer((req,res)=>{
+   unifiedServer(req,res);
+});
+
+httpServer.listen(config.httpPort,()=>{
+    console.log(`Listening on port ${config.httpPort} in ${config.envName} mode`)
+});
+
+
+const httpsServerOptions = {
+    'key':fs.readFileSync('./https/key.pem'),
+    'cert': fs.readFileSync('./https/cert.pem')
+};
+
+httpsServer = https.createServer(httpsServerOptions,(req,res)=>{
+    unifiedServer(req,res);
+});
+
+httpsServer.listen(config.httpsPort,()=>{
+    console.log(`Listening on port ${config.httpsPort} in ${config.envName} mode`)
+});
+
+const handlers = {};
+
+handlers.sample = (data,callback)=>{
+    callback(406,{'name':'sample handler'});
+};
+
+handlers.notFound = (data,callback)=>{
+    callback(404);
+};
+
+const router = {
+    'sample': handlers.sample
+}
+
+const unifiedServer = (req,res)=>{
     const parseUrl = url.parse(req.url,true);
     const path = parseUrl.pathname;
     const trimmedPath = path.replace(/^\/+|\/+$/g,'');
@@ -38,23 +76,4 @@ const server = http.createServer((req,res)=>{
             console.log(`Request recieved with ${statusCode} , ${payloadString}`);
         });
     }); // always get called even if there is no data payload incoming
-
-});
-
-server.listen(config.port,()=>{
-    console.log(`Listening on port ${config.port} in ${config.envName} mode`)
-});
-
-const handlers = {};
-
-handlers.sample = (data,callback)=>{
-    callback(406,{'name':'sample handler'});
-};
-
-handlers.notFound = (data,callback)=>{
-    callback(404);
-};
-
-const router = {
-    'sample': handlers.sample
 }

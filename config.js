@@ -1,12 +1,16 @@
+//openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout key.pem -out cert.pem
+
 const environment = {};
 
 environment.staging = {
-    'port' : 3000,
+    'httpPort' : 3000,
+    'httpsPort' : 3001, 
     'envName' : 'staging'
 }
 
 environment.production = {
-    'port' : 5000,
+    'httpPort' : 5000,
+    'httpsPort' : 5001,
     'envName' : 'production'
 }
 
