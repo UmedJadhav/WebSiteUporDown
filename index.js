@@ -3,7 +3,13 @@ const http = require('http');
 const https = require('https');
 const url = require('url');
 const fs = require('fs');
+const _data = require('./lib/data');
 const stringDecoder = require('string_decoder').StringDecoder;
+
+_data.delete('test','newFile',(err)=>{
+    console.log(err) ;
+    //console.log(data);
+});
 
 const httpServer = http.createServer((req,res)=>{
    unifiedServer(req,res);
@@ -29,16 +35,16 @@ httpsServer.listen(config.httpsPort,()=>{
 
 const handlers = {};
 
-handlers.sample = (data,callback)=>{
-    callback(406,{'name':'sample handler'});
-};
+handlers.ping = (data,callback)=>{
+    callback(200);
+}
 
 handlers.notFound = (data,callback)=>{
     callback(404);
 };
 
 const router = {
-    'sample': handlers.sample
+    'ping' : handlers.ping
 }
 
 const unifiedServer = (req,res)=>{
@@ -49,7 +55,7 @@ const unifiedServer = (req,res)=>{
     const headers = req.headers;
     const method = req.method.toLowerCase();
     const decoder = new stringDecoder('utf-8');
-    const buffer =  '';
+    let buffer =  '';
     
     req.on('data',(data)=>{
         buffer += decoder.write(data);
@@ -57,7 +63,7 @@ const unifiedServer = (req,res)=>{
     
     req.on('end',()=>{
         buffer += decoder.end();
-        const chosenHandler = typeof(router(trimmedPath)) !== 'undefined' ? router[trimmedPath] : handlers.notFound ;
+        const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound ;
         const data = {
             'trimmedPath': trimmedPath , 
             'queryStringObject' : queryScriptObject ,
