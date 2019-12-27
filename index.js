@@ -1,15 +1,11 @@
-const config = require('./config');
+const config = require('./lib/config');
+const handlers = require('./lib/handlers');
+const helpers = require('./lib/helpers');
 const http = require('http');
 const https = require('https');
 const url = require('url');
 const fs = require('fs');
-const _data = require('./lib/data');
 const stringDecoder = require('string_decoder').StringDecoder;
-
-_data.delete('test','newFile',(err)=>{
-    console.log(err) ;
-    //console.log(data);
-});
 
 const httpServer = http.createServer((req,res)=>{
    unifiedServer(req,res);
@@ -33,18 +29,9 @@ httpsServer.listen(config.httpsPort,()=>{
     console.log(`Listening on port ${config.httpsPort} in ${config.envName} mode`)
 });
 
-const handlers = {};
-
-handlers.ping = (data,callback)=>{
-    callback(200);
-}
-
-handlers.notFound = (data,callback)=>{
-    callback(404);
-};
-
 const router = {
-    'ping' : handlers.ping
+    'ping' : handlers.ping ,
+    'users' : handlers.users
 }
 
 const unifiedServer = (req,res)=>{
@@ -69,9 +56,10 @@ const unifiedServer = (req,res)=>{
             'queryStringObject' : queryScriptObject ,
             'method' : method , 
             'headers' : headers ,
-            'payload' : buffer
+            'payload' : helpers.parseJSON(buffer)
         };
 
+        //Sets the statusCode and the accompanying message()
         chosenHandler(data,(statusCode , payload)=>{
             statusCode = typeof(statusCode) === 'Number' ? statusCode : 200 ;
             payload = typeof(payload) === 'Object' ? payload : {};
