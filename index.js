@@ -7,6 +7,10 @@ const url = require('url');
 const fs = require('fs');
 const stringDecoder = require('string_decoder').StringDecoder;
 
+helpers.sendTwilioSms('4158375309','Hello!',(err)=>{
+    console.log(`from index.js ${err}`);
+});
+
 const httpServer = http.createServer((req,res)=>{
    unifiedServer(req,res);
 });
