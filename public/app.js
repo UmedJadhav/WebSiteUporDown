@@ -59,3 +59,104 @@ const payloadString = JSON.stringify(payload);
 xhr.send(payloadString);
 
 }
+
+app.bindForms = () => {
+  if(document.querySelector("form")){
+    console.log('Entering binding forms')
+    const allForms = document.querySelectorAll("form");
+    for(let i = 0; i < allForms.length; i++){
+        allForms[i].addEventListener("submit", (e) => {
+
+        e.preventDefault();
+        const formId = this.id;
+        const path = this.action;
+        const method = this.method.toUpperCase();
+
+        // Hide the error message (if it's currently shown due to a previous error)
+        document.querySelector("#"+formId+" .formError").style.display = 'none';
+
+        // Hide the success message (if it's currently shown due to a previous error)
+        if(document.querySelector("#"+formId+" .formSuccess")){
+          document.querySelector("#"+formId+" .formSuccess").style.display = 'none';
+        }
+
+        const payload = {};
+        const elements = this.elements;
+        for(let i = 0; i < elements.length; i++){
+          if(elements[i].type !== 'submit'){
+            var classOfElement = typeof(elements[i].classList.value) == 'string' && elements[i].classList.value.length > 0 ? elements[i].classList.value : '';
+            var valueOfElement = elements[i].type == 'checkbox' && classOfElement.indexOf('multiselect') == -1 ? elements[i].checked : classOfElement.indexOf('intval') == -1 ? elements[i].value : parseInt(elements[i].value);
+            var elementIsChecked = elements[i].checked;
+            var nameOfElement = elements[i].name;
+            if(nameOfElement == '_method'){
+              method = valueOfElement;
+            } else {
+              if(nameOfElement == 'httpmethod'){
+                nameOfElement = 'method';
+              }
+              if(nameOfElement == 'uid'){
+                nameOfElement = 'id';
+              }
+              if(classOfElement.indexOf('multiselect') > -1){
+                if(elementIsChecked){
+                  payload[nameOfElement] = typeof(payload[nameOfElement]) == 'object' && payload[nameOfElement] instanceof Array ? payload[nameOfElement] : [];
+                  payload[nameOfElement].push(valueOfElement);
+                }
+              } else {
+                payload[nameOfElement] = valueOfElement;
+              }
+
+            }
+          }
+        }
+
+        // If the method is DELETE, the payload should be a queryStringObject instead
+        var queryStringObject = method == 'DELETE' ? payload : {};
+
+        // Call the API
+        app.client.request(undefined,path,method,queryStringObject,payload,(statusCode,responsePayload) => {
+          // Display an error on the form if needed
+          console.log('From frontend', statusCode)
+          if(statusCode !== 200){
+
+            if(statusCode == 403){
+              // log the user out
+              app.logUserOut();
+
+            } else {
+
+              // Try to get the error from the api, or set a default error message
+              var error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
+
+              // Set the formError field with the error text
+              document.querySelector("#"+formId+" .formError").innerHTML = error;
+
+              // Show (unhide) the form error field on the form
+              document.querySelector("#"+formId+" .formError").style.display = 'block';
+            }
+          } else {
+            app.formResponseProcessor(formId,payload,responsePayload);
+          }
+
+        });
+      });
+    }
+  }
+};
+
+app.formResponseProcessor = (formId,requestPayload,responsePayload) => {
+  var functionToCall = false;
+  // If account creation was successful, try to immediately log the user in
+  if(formId == 'accountCreate'){
+    console.log('Account create form was success')
+  }
+
+};
+
+app.init = () => {
+  app.bindForms();
+}
+
+app.onload = () => {
+  app.init();
+}
