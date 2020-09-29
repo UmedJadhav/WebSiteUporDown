@@ -2,3 +2,4 @@
 .data/*
 https/*
 lib/.env.js
+.DS_Store
