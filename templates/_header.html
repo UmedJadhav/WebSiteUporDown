@@ -3,11 +3,10 @@
         <meta charset='utf-8'>
         <meta http-equiv='content-language' content='en-us'>
         <base href="{global.baseUrl}"/>
-        <title>{head.title} | {global.appName}</title>
+        <title> {global.appName} | {head.title}</title>
         <meta name='description' content="{head.description}">
-        <link type='image/x-icon' rel='icon' href='favicon.ico'>
-        <script type='text/javascript' charset='urf-8' src='/
-        public/app.js'></script>
+        <link type='image/x-icon' rel='icon' href='/favicon.ico'>
+        <script type='text/javascript' charset='urf-8' src='/public/app.js'></script>
         <link rel='stylesheet' type='text/css' href='/public/app.css'/>
     </head>
     <body class='{body.class}'>
@@ -32,7 +31,7 @@
                         <a href="/account/edit"  class='loggedIn'>Account Settings</a> 
                     </li>
                     <li>
-                        <a href="#" class='loggedIn'>Logout</a>
+                        <a id='logoutButton' href="#" class='loggedIn'>Logout</a>
                     </li>
                 </ul>
             </div>

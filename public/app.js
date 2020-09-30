@@ -60,6 +60,29 @@ xhr.send(payloadString);
 
 }
 
+app.bindLogoutButton = () => {
+  document.getElementById("logoutButton").addEventListener("click", (e) => {
+    e.preventDefault();
+    app.logUserOut();
+  });
+};
+
+app.logUserOut = () => {
+  const tokenId = typeof(app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
+
+  const queryStringObject = {
+    'id' : tokenId
+  };
+
+  app.client.request(undefined,'/api/tokens','DELETE',queryStringObject,undefined,(statusCode,responsePayload)=>{
+    // Set the app.config token as false
+    app.setSessionToken(false);
+
+    window.location = '/session/deleted';
+
+  });
+};
+
 app.bindForms = () => {
   if(document.querySelector("form")){
     document.querySelector("form").addEventListener("submit", function(e){
@@ -122,11 +145,11 @@ app.formResponseProcessor = (formId,requestPayload,responsePayload) => {
   }
 };
 
-app.getSessionToken = function(){
-  var tokenString = localStorage.getItem('token');
+app.getSessionToken = () => {
+  const tokenString = localStorage.getItem('token');
   if(typeof(tokenString) == 'string'){
     try{
-      var token = JSON.parse(tokenString);
+      const token = JSON.parse(tokenString);
       app.config.sessionToken = token;
       if(typeof(token) == 'object'){
         app.setLoggedInClass(true);
@@ -140,8 +163,8 @@ app.getSessionToken = function(){
   }
 };
 
-app.setLoggedInClass = function(add){
-  var target = document.querySelector("body");
+app.setLoggedInClass = (add) => {
+  const target = document.querySelector("body");
   if(add){
     target.classList.add('loggedIn');
   } else {
@@ -149,9 +172,9 @@ app.setLoggedInClass = function(add){
   }
 };
 
-app.setSessionToken = function(token){
+app.setSessionToken = (token) => {
   app.config.sessionToken = token;
-  var tokenString = JSON.stringify(token);
+  const tokenString = JSON.stringify(token);
   localStorage.setItem('token',tokenString);
   if(typeof(token) == 'object'){
     app.setLoggedInClass(true);
@@ -160,19 +183,19 @@ app.setSessionToken = function(token){
   }
 };
 
-app.renewToken = function(callback){
-  var currentToken = typeof(app.config.sessionToken) == 'object' ? app.config.sessionToken : false;
+app.renewToken = (callback) => {
+  const currentToken = typeof(app.config.sessionToken) == 'object' ? app.config.sessionToken : false;
   if(currentToken){
     // Update the token with a new expiration
-    var payload = {
+    const payload = {
       'id' : currentToken.id,
       'extend' : true,
     };
-    app.client.request(undefined,'api/tokens','PUT',undefined,payload,function(statusCode,responsePayload){
+    app.client.request(undefined,'api/tokens','PUT',undefined,payload,(statusCode,responsePayload) => {
       // Display an error on the form if needed
       if(statusCode == 200){
-        var queryStringObject = {'id' : currentToken.id};
-        app.client.request(undefined,'api/tokens','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+        const queryStringObject = {'id' : currentToken.id};
+        app.client.request(undefined,'api/tokens','GET',queryStringObject,undefined,(statusCode,responsePayload) => {
           // Display an error on the form if needed
           if(statusCode == 200){
             app.setSessionToken(responsePayload);
@@ -193,7 +216,7 @@ app.renewToken = function(callback){
   }
 };
 
-app.tokenRenewalLoop = function(){
+app.tokenRenewalLoop = () => {
   setInterval(function(){
     app.renewToken(function(err){
       if(!err){
@@ -205,6 +228,7 @@ app.tokenRenewalLoop = function(){
 
 app.init = function(){
   app.bindForms();
+  app.bindLogoutButton();
   app.getSessionToken();
   app.tokenRenewalLoop();
 };
