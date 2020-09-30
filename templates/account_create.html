@@ -1,4 +1,4 @@
-<h1>Create your account</h1>
+<h1>{head.title}</h1>
 <h2>{head.description}</h2>
 
 <div class="formWrapper">
@@ -20,9 +20,9 @@
       <div class="inputLabel">Choose a Password</div>
       <input type="password" name="password" placeholder="Make it a good one!" />
     </div>
-    <div class="inputWrapper">
-      <div class="inputLabel">Do you agree to the terms and conditions?</div>
-      <input type="checkbox" name="tosAgreement" value="agree">
+    <div class="inputWrapper flex">
+      <div class="inputLabel conditon">Do you agree to the terms and conditions?</div>
+      <input class='checkbox' type="checkbox" name="tosAgreement" value="agree">
     </div>
     <div class="inputWrapper ctaWrapper">
       <button type="submit" class="cta blue">Get Started</button>

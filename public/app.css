@@ -220,6 +220,19 @@ input.disabled{
   padding: 0 0 20px 0;
 }
 
+.flex{
+  display: flex;
+}
+
+.condition{
+  flex-grow: 4;
+}
+
+.checkbox{
+  flex-grow: 1;
+  width: 10%;
+}
+
 .inputLabel{
   padding: 0 0 5px 0;
   color: #808080;
