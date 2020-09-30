@@ -84,35 +84,37 @@ app.logUserOut = () => {
 };
 
 app.bindForms = () => {
+  const a = document.querySelector("form");
   if(document.querySelector("form")){
-    document.querySelector("form").addEventListener("submit", function(e){
+    Array.from(document.querySelectorAll("form")).forEach( function(form){
+      form.addEventListener("submit", function(e){
 
-      e.preventDefault();
-      const formId = this.id;
-      const path = this.action;
-      const method = this.method.toUpperCase();
-
-      // Hide the error message (if it's currently shown due to a previous error)
-      document.querySelector("#"+formId+" .formError").style.display = 'hidden';
-      const payload = {};
-      const elements = this.elements;
-      for(let i = 0; i < elements.length; i++){
-        if(elements[i].type !== 'submit'){
-          const valueOfElement = elements[i].type == 'checkbox' ? elements[i].checked : elements[i].value;
-          payload[elements[i].name] = valueOfElement;
+        e.preventDefault();
+        const formId = this.id;
+        const path = this.action;
+        let method = this.method.toUpperCase();
+  
+        // Hide the error message (if it's currently shown due to a previous error)
+        document.querySelector("#"+formId+" .formError").style.display = 'hidden';
+        const payload = {};
+        const elements = this.elements;
+        for(let i = 0; i < elements.length; i++){
+          if(elements[i].type !== 'submit'){
+            const valueOfElement = elements[i].type == 'checkbox' ? elements[i].checked : elements[i].value;
+            payload[elements[i].name] = valueOfElement;
+          }
         }
-      }
-
-      app.client.request(undefined,path,method,undefined,payload,(statusCode,responsePayload) => {
-        if(statusCode !== 200){
-          const error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
-          document.querySelector("#"+formId+" .formError").innerHTML = error;
-          document.querySelector("#"+formId+" .formError").style.display = 'block';
-
-        } else {
-          app.formResponseProcessor(formId,payload,responsePayload);
-        }
-
+  
+        app.client.request(undefined,path,method,undefined,payload,(statusCode,responsePayload) => {
+          if(statusCode !== 200){
+            const error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
+            document.querySelector("#"+formId+" .formError").innerHTML = error;
+            document.querySelector("#"+formId+" .formError").style.display = 'block';
+  
+          } else {
+            app.formResponseProcessor(formId,payload,responsePayload);
+          }
+        });
       });
     });
   }
@@ -143,6 +145,12 @@ app.formResponseProcessor = (formId,requestPayload,responsePayload) => {
     app.setSessionToken(responsePayload);
     window.location = '/checks/all';
   }
+
+  const formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
+  if(formsWithSuccessMessages.indexOf(formId) > -1){
+      document.querySelector("#"+formId+" .formSuccess").style.display = 'block';
+  }
+
 };
 
 app.getSessionToken = () => {
@@ -226,11 +234,48 @@ app.tokenRenewalLoop = () => {
   },1000 * 60);
 };
 
+app.loadDataOnPage = function(){
+  var bodyClasses = document.querySelector("body").classList;
+  var primaryClass = typeof(bodyClasses[0]) == 'string' ? bodyClasses[0] : false;
+  if(primaryClass == 'accountEdit'){
+    app.loadAccountEditPage();
+  }
+};
+
+app.loadAccountEditPage = function(){
+  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+  if(phone){
+    var queryStringObject = {
+      'phone' : phone
+    };
+    app.client.request(undefined,'/api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+      if(statusCode == 200){
+
+        document.querySelector("#accountEdit1 .firstNameInput").value = responsePayload.firstName;
+        document.querySelector("#accountEdit1 .lastNameInput").value = responsePayload.lastName;
+        document.querySelector("#accountEdit1 .displayPhoneInput").value = responsePayload.phone;
+
+        var hiddenPhoneInputs = document.querySelectorAll("input.hiddenPhoneNumberInput");
+        for(var i = 0; i < hiddenPhoneInputs.length; i++){
+            hiddenPhoneInputs[i].value = responsePayload.phone;
+        }
+
+      } else {
+        // If the request comes back as something other than 200, logout user (on the assumption that the api is temporarily down or the users token is bad)
+        app.logUserOut();
+      }
+    });
+  } else {
+    app.logUserOut();
+  }
+};
+
 app.init = function(){
   app.bindForms();
   app.bindLogoutButton();
   app.getSessionToken();
   app.tokenRenewalLoop();
+  app.loadDataOnPage();
 };
 
 window.onload = function(){
